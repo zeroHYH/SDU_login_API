@@ -13,7 +13,8 @@ def login(username, password, baseURL="https://pass.sdu.edu.cn/") -> str:
 # 发送第一个请求，获取ticket
     ticket = httpx.post(
         f"{baseURL}cas/restlet/tickets",
-        data={"username": username, "password": password},
+        # data={"username": username, "password": password},
+        content=f"username={username}&password={password}"
     ).text
     # print("ticket: " + ticket)
     # 检查ticket是否以TGT开头
@@ -29,13 +30,14 @@ def login(username, password, baseURL="https://pass.sdu.edu.cn/") -> str:
 
     return sTicket
 def get_user_name_and_id(sTicket, baseURL="https://pass.sdu.edu.cn/"):
-    user_data = xml.dom.minidom.parseString(httpx.get(
+    _ = httpx.get(
         f"{baseURL}cas/serviceValidate",
         params={
             "ticket": sTicket,
             "service": "https://service.sdu.edu.cn/tp_up/view?m=up",
         },
-    ).text)
+    ).text
+    user_data = xml.dom.minidom.parseString(_)
     name = user_data.getElementsByTagName("cas:USER_NAME")[0].childNodes[0].data
     student_id = user_data.getElementsByTagName("sso:user")[0].childNodes[0].data
     return name, student_id
