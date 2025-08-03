@@ -13,7 +13,7 @@ def login(username, password, baseURL="https://pass.sdu.edu.cn/") -> str:
 # 发送第一个请求，获取ticket
     ticket = httpx.post(
         f"{baseURL}cas/restlet/tickets",
-        data={"username": username, "password": password, "lt": "LT-1-1-1"},
+        data={"username": username, "password": password},
     ).text
     # print("ticket: " + ticket)
     # 检查ticket是否以TGT开头
@@ -52,4 +52,5 @@ if __name__ == "__main__":
         exit(1)
     print(f"姓名：{name}")
     print(f"学号：{student_id}")
+
 
