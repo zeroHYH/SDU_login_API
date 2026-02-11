@@ -4,9 +4,7 @@ from uuid import UUID, uuid7
 
 import httpx
 from fastapi import Body, FastAPI, HTTPException, Request, Response
-from fastapi.staticfiles import StaticFiles
 from httpx import Client, Cookies, HTTPError
-from uvicorn import run
 
 from uniform_login_des import strEnc
 
@@ -109,10 +107,3 @@ def sms_login(
         "sduid": sduid,
         "email": info.get("EMAIL", ""),
     }
-
-
-app.mount("/", StaticFiles(directory=".", html=True))
-
-
-if __name__ == "__main__":
-    run(app, port=8201)
