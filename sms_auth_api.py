@@ -14,21 +14,22 @@ app = FastAPI(debug=True, title="统一认证短信登录")
 login_sessions: dict[str, Cookies] = {}
 
 
-def clean_expired_sessions():
+def clear_expired_sessions():
     now = datetime.now().timestamp()
-    [login_sessions.pop(u) for u in login_sessions if now > UUID(u).time + 60 * 1000]
+    for u in [u for u in login_sessions if now > UUID(u).time + 120 * 1000]:
+        login_sessions.pop(u)
 
 
 @app.post("/code")
 def get_image_code():
-    clean_expired_sessions()
+    clear_expired_sessions()
     try:
         upstream = httpx.get(f"https://pass.sdu.edu.cn/cas/code?{random()}")
     except HTTPError:
         raise HTTPException(503, "cas unavailable")
     login_sessions[(ls := uuid7().hex)] = upstream.cookies
     response = Response(upstream.content, media_type="image/gif")
-    response.set_cookie("login_session", ls, max_age=60, httponly=True)
+    response.set_cookie("login_session", ls, max_age=120, httponly=True)
     return response
 
 
@@ -38,7 +39,7 @@ def get_sms_code(
     mobile: str = Body(max_length=11, min_length=11, pattern=r"^\d+$"),
     code: str = Body(max_length=4, min_length=4, pattern=r"^\d+$"),
 ):
-    clean_expired_sessions()
+    clear_expired_sessions()
     if (ls := request.cookies.get("login_session")) not in login_sessions:
         raise HTTPException(400, "Invalid session or session expired")
     try:
@@ -55,6 +56,8 @@ def get_sms_code(
     except HTTPError:
         raise HTTPException(503, "cas unavailable")
     login_sessions[ls].update(res.cookies)
+    if error := res.json().get("error"):
+        raise HTTPException(400, error)
     if res.json().get("redirectUrl") != "login":
         raise HTTPException(400, "Invalid code")
 
@@ -65,7 +68,7 @@ def sms_login(
     mobile: str = Body(max_length=11, min_length=11, pattern=r"^\d+$"),
     code: str = Body(max_length=6, min_length=6, pattern=r"^\d+$"),
 ):
-    clean_expired_sessions()
+    clear_expired_sessions()
     if (ls := request.cookies.get("login_session")) not in login_sessions:
         raise HTTPException(400, "Invalid session or session expired")
     client = Client(cookies=login_sessions.pop(ls))
