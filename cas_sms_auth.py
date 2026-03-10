@@ -1,6 +1,7 @@
-from tkinter import Tk, Label, PhotoImage
-from httpx import Client
 from random import random
+from tkinter import Label, PhotoImage, Tk
+
+from httpx import Client
 
 mobile = ""  # Your mobile number
 service = ""  #  "https://aiassist.sdu.edu.cn/common/actionCasLogin?redirect_url=https%3A%2F%2Faiassist.sdu.edu.cn%2Fpage%2Fsite%2FnewPc%3Flogin_return%3Dtrue"

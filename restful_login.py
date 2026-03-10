@@ -1,6 +1,7 @@
-from requests import Session
 from datetime import datetime, timezone
 from re import search
+
+from requests import Session
 
 
 def login(
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     data = ss.get(
         "https://aiassist.sdu.edu.cn/site/user_info", cookies=cookies
     )  # get expiration time
-    print(f"Hi {data.json()["d"]["user_name"]}, welcome to the SDU AI assistant!")
+    print(f"Hi {data.json()['d']['user_name']}, welcome to the SDU AI assistant!")
     print(
         {
             "cookies": {k: v for k, v in ss.cookies.items()},

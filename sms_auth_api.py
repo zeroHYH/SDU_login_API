@@ -5,6 +5,7 @@ from uuid import UUID, uuid7
 import httpx
 from fastapi import Body, FastAPI, HTTPException, Request, Response
 from httpx import Client, Cookies, HTTPError
+from pydantic import BaseModel, Field
 
 from uniform_login_des import strEnc
 
@@ -12,6 +13,16 @@ app = FastAPI(debug=True, title="统一认证短信登录")
 
 
 login_sessions: dict[str, Cookies] = {}
+
+
+class SduerInfo(BaseModel):
+    sduid: str = Field(validation_alias="ID_NUMBER", description="学号")
+    name: str = Field(validation_alias="USER_NAME", description="姓名")
+    sex: str = Field(validation_alias="USER_SEX", description="性别")
+    type: str = Field(validation_alias="ID_TYPE", description="类型")
+    email: str = Field(validation_alias="EMAIL", description="邮箱")
+    school: str = Field(validation_alias="UNIT_NAME", description="学院")
+    tel: str = Field(validation_alias="MOBILE", description="电话")
 
 
 def clear_expired_sessions():
@@ -62,7 +73,7 @@ def get_sms_code(
         raise HTTPException(400, "Invalid code")
 
 
-@app.post("/login")
+@app.post("/login", response_model=SduerInfo)
 def sms_login(
     request: Request,
     mobile: str = Body(max_length=11, min_length=11, pattern=r"^\d+$"),
@@ -105,8 +116,4 @@ def sms_login(
         ).json()
     except HTTPError:
         raise HTTPException(503, "could not get user info from service.sdu.edu.cn")
-    return {
-        "name": info.get("USER_NAME"),
-        "sduid": sduid,
-        "email": info.get("EMAIL", ""),
-    }
+    return info
